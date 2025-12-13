@@ -1,0 +1,9 @@
+fastapi
+uvicorn
+gunicorn
+httpx
+google-cloud-storage
+numpy
+opencv-python-headless
+pydantic
+python-multipart

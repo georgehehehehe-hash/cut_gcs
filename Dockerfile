@@ -43,4 +43,5 @@ WORKDIR /app
 COPY . .
 
 # 启动命令
-CMD exec uvicorn main:app --host 0.0.0.0 --port ${PORT:-8080}
+# 替换为 (使用 Gunicorn 启动 Uvicorn workers):
+CMD exec gunicorn -w 4 -k uvicorn.workers.UvicornWorker main:app --bind 0.0.0.0:${PORT}

@@ -16,13 +16,12 @@ from google.cloud import storage
 try:
     BUCKET_NAME = os.environ['GCS_BUCKET_NAME']
 except KeyError:
-    raise Exception("GCS_BUCKET_NAME environment variable not set. Deployment failed.")
+    # ⚠️ 必须确保这行代码在 Cloud Run 中被环境变量设置覆盖
+    raise Exception("GCS_BUCKET_NAME environment variable not set. Deployment failed.") 
 
-app = FastAPI(title="Grid Splitter Service")
+app = FastAPI(title="Grid Splitter Service") 
 
-# 初始化 GCS 客户端 (Cloud Run 环境下会自动通过内网获取认证)
-# storage_client = storage.Client()
-# bucket = storage_client.bucket(BUCKET_NAME)
+
 
 
 class ImageRequest(BaseModel):

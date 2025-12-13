@@ -1,14 +1,13 @@
-# --------------------------------------------------------------------------
-# 阶段 1: 构建阶段 (安装所有依赖)
-# --------------------------------------------------------------------------
-FROM python:3.9-slim as builder
+# 使用官方 Python 3.9 镜像
+FROM python:3.9
 
+# 设置环境变量，确保 Python 链接和路径正确
 ENV PYTHONDONTWRITEBYTECODE=1
 ENV PYTHONUNBUFFERED=1
 
-WORKDIR /app
-
-# 1. 安装系统库 (确保 OpenCV 运行)
+# 1. 安装必要的系统库
+# 必须使用完整的 python:3.9 镜像来确保 apt-get 正常
+# 我们将安装 OpenCV 核心依赖
 RUN apt-get update \
     && apt-get install -y --no-install-recommends \
     libgl1 \
@@ -19,31 +18,18 @@ RUN apt-get update \
     && apt-get clean \
     && rm -rf /var/lib/apt/lists/*
 
-# 2. 安装 Python 依赖
+# 2. 设置工作目录
+WORKDIR /app
+
+# 3. 安装 Python 依赖
 COPY requirements.txt .
+# 升级构建工具并安装所有依赖
 RUN pip install --upgrade pip setuptools \
     && pip install --no-cache-dir -r requirements.txt
     
-# --------------------------------------------------------------------------
-# 阶段 2: 运行时阶段 (精简环境)
-# --------------------------------------------------------------------------
-FROM python:3.9-slim
-
-# 设置工作目录
-WORKDIR /app
-
-# 关键修复: 复制 Python 库和由 pip 创建的可执行文件
-# 1. 复制由 pip 生成的 /usr/local/bin 中的可执行文件 (如 gunicorn)
-COPY --from=builder /usr/local/bin /usr/local/bin
-
-# 2. 复制所有 Python 库
-COPY --from=builder /usr/local/lib/python3.9/site-packages /usr/local/lib/python3.9/site-packages
-
-# 3. 复制系统共享库和链接 (确保 OpenCV 找到依赖)
-COPY --from=builder /usr/lib/x86_64-linux-gnu /usr/lib/x86_64-linux-gnu
-
-# 复制应用程序代码
+# 4. 复制应用程序代码
 COPY . .
 
-# 启动命令 (使用 Gunicorn)
+# 5. 启动命令 (使用 Gunicorn)
+# Gunicorn 在完整的 Python 镜像中应该能正确找到路径
 CMD exec gunicorn -w 4 -k uvicorn.workers.UvicornWorker main:app --bind 0.0.0.0:${PORT}

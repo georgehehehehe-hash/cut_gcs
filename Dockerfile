@@ -36,6 +36,9 @@ FROM python:3.9-slim
 COPY --from=builder /usr/lib/x86_64-linux-gnu /usr/lib/x86_64-linux-gnu
 COPY --from=builder /usr/local/lib/python3.9/site-packages /usr/local/lib/python3.9/site-packages
 
+# ⚠️ 修复 1：复制 /usr/local/bin 目录中的可执行文件
+COPY --from=builder /usr/local/bin /usr/local/bin
+
 # 设置工作目录
 WORKDIR /app
 

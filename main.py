@@ -21,18 +21,34 @@ except KeyError:
 app = FastAPI(title="Grid Splitter Service")
 
 # 初始化 GCS 客户端 (Cloud Run 环境下会自动通过内网获取认证)
-storage_client = storage.Client()
-bucket = storage_client.bucket(BUCKET_NAME)
+# storage_client = storage.Client()
+# bucket = storage_client.bucket(BUCKET_NAME)
 
 
 class ImageRequest(BaseModel):
     url: str
 
 
+# 放置在 BUCKET_NAME 定义之后
+def get_gcs_bucket():
+    """在请求时初始化并获取 GCS Bucket 实例"""
+    try:
+        # 在请求时创建客户端
+        client = storage.Client()
+        return client.bucket(BUCKET_NAME)
+    except Exception as e:
+        # 如果认证失败，抛出 HTTP 500 错误
+        raise HTTPException(status_code=500, detail=f"GCS 认证或配置失败: {e}")
+
+
 def process_and_upload(image_bytes: bytes):
     """
     核心处理流：内存解码 -> 切割 -> 内存上传 -> 返回URL
     """
+
+    # 1. 在这里获取 Bucket 实例（请求发生时）
+    current_bucket = get_gcs_bucket()
+    
     # 1. 解码图片
     nparr = np.frombuffer(image_bytes, np.uint8)
     img = cv2.imdecode(nparr, cv2.IMREAD_COLOR)
@@ -86,26 +102,19 @@ def process_and_upload(image_bytes: bytes):
 
     # 5. 切割并上传
     uploaded_urls = []
-    # 生成批次ID，作为文件夹名
-    batch_id = datetime.datetime.now().strftime("%Y%m%d_%H%M%S") + "_" + str(uuid.uuid4())[:6]
+    # ... (生成 batch_id 逻辑不变)
 
     for idx, (x, y, w, h) in enumerate(sorted_crops):
-        crop_img = img[y:y + h, x:x + w]
-
-        # 编码回 JPG 格式
-        success, encoded_img = cv2.imencode('.jpg', crop_img)
-        if success:
-            file_bytes = encoded_img.tobytes()
-            # 设置云端路径: split_results/批次号/001.jpg
-            blob_name = f"split_results/{batch_id}/{idx + 1:03d}.jpg"
-            blob = bucket.blob(blob_name)
-
-            # 上传 (因为我们在 Bucket 层级开了 public 权限，所以不用单独设 ACL)
-            blob.upload_from_string(file_bytes, content_type='image/jpeg')
-
-            # 拼接公开 URL
-            public_url = f"https://storage.googleapis.com/{BUCKET_NAME}/{blob_name}"
-            uploaded_urls.append(public_url)
+        # ... (切割和编码为 bytes 的逻辑不变)
+        
+        # ⚠️ 使用 current_bucket 变量进行操作
+        blob_name = f"split_results/{batch_id}/{idx+1:03d}.jpg"
+        blob = current_bucket.blob(blob_name) 
+        
+        # 上传
+        blob.upload_from_string(file_bytes, content_type='image/jpeg')
+        # ... (拼接 URL 逻辑不变)
+        uploaded_urls.append(public_url)
 
     return uploaded_urls
 

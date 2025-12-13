@@ -10,7 +10,13 @@ from google.cloud import storage
 
 # --- 配置 ---
 # 【请修改】这里填你第一步创建的 Bucket 名字
-BUCKET_NAME = "你的-bucket-名字-填在这里"
+# BUCKET_NAME = "你的-bucket-名字-填在这里"
+
+# --- 配置 ---
+try:
+    BUCKET_NAME = os.environ['GCS_BUCKET_NAME']
+except KeyError:
+    raise Exception("GCS_BUCKET_NAME environment variable not set. Deployment failed.")
 
 app = FastAPI(title="Grid Splitter Service")
 

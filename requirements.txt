@@ -1,9 +1,5 @@
 fastapi
 uvicorn
-gunicorn
-httpx
+pillow
+requests
 google-cloud-storage
-numpy
-opencv-python-headless
-pydantic
-python-multipart

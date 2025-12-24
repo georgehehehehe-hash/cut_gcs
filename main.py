@@ -50,7 +50,7 @@ def crop_image(payload: dict):
             cropped = img.crop((left, top, right, bottom))
 
             # 2. 【新增】每一边内缩 5px
-            border = 20
+            border = 100
             # 确保子图尺寸大于要裁掉的边界，避免报错
             if cropped.width > border * 2 and cropped.height > border * 2:
                 cropped = cropped.crop((

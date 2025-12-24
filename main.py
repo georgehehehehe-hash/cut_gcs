@@ -42,23 +42,12 @@ def crop_image(payload: dict):
     index = 1
     for row in range(GRID_SIZE):
         for col in range(GRID_SIZE):
-            left = col * tile_w
-            top = row * tile_h
-            right = left + tile_w
-            bottom = top + tile_h
+            left = col * tile_w * (tile_w * 0.1)
+            top = row * tile_h * (tile_h * 0.1)
+            right = left + tile_w * (tile_w * 0.1)
+            bottom = top + tile_h * (tile_h * 0.1)
 
             cropped = img.crop((left, top, right, bottom))
-
-            # 2. 【新增】每一边内缩 5px
-            border = 100
-            # 确保子图尺寸大于要裁掉的边界，避免报错
-            if cropped.width > border * 2 and cropped.height > border * 2:
-                cropped = cropped.crop((
-                    border,          # 左边界向内缩
-                    border,          # 上边界向内缩
-                    cropped.width - border,  # 右边界向内缩
-                    cropped.height - border  # 下边界向内缩
-                ))
 
             buf = io.BytesIO()
             cropped.save(buf, format="JPEG", quality=95)

@@ -49,6 +49,17 @@ def crop_image(payload: dict):
 
             cropped = img.crop((left, top, right, bottom))
 
+            # 2. 【新增】每一边内缩 5px
+            border = 5
+            # 确保子图尺寸大于要裁掉的边界，避免报错
+            if cropped.width > border * 2 and cropped.height > border * 2:
+                cropped = cropped.crop((
+                    border,          # 左边界向内缩
+                    border,          # 上边界向内缩
+                    cropped.width - border,  # 右边界向内缩
+                    cropped.height - border  # 下边界向内缩
+                ))
+
             buf = io.BytesIO()
             cropped.save(buf, format="JPEG", quality=95)
             buf.seek(0)

@@ -42,10 +42,10 @@ def crop_image(payload: dict):
     index = 1
     for row in range(GRID_SIZE):
         for col in range(GRID_SIZE):
-            left = col * tile_w * (tile_w * 0.1)
-            top = row * tile_h * (tile_h * 0.1)
-            right = left + tile_w * (tile_w * 0.1)
-            bottom = top + tile_h * (tile_h * 0.1)
+            left = col * tile_w + (tile_w * 0.1)
+            top = row * tile_h + (tile_h * 0.1)
+            right = left + tile_w - (tile_w * 0.1)
+            bottom = top + tile_h - (tile_h * 0.1)
 
             cropped = img.crop((left, top, right, bottom))
 
